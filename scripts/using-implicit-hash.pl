@@ -14,6 +14,6 @@ my %where = (title_id => 'MC3026');
       });
 
 
-while (my $rec = $set->Next) {
-    print $rec->{royalty}, $/;
+while ($set->Next) {
+    print $set{royalty}, $/;
 }

@@ -1,3 +1,5 @@
+#!/usr/bin/perl
+
 use Text::Template;
 use strict;
 our $OUT;

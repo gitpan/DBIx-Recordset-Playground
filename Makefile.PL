@@ -1,4 +1,3 @@
-use 5.008;
 use ExtUtils::MakeMaker;
 # See lib/ExtUtils/MakeMaker.pm for details of how to influence
 # the contents of the Makefile that is written.
@@ -8,6 +7,7 @@ WriteMakefile(
     'PREREQ_PM'		=> {
 			    DBIx::Recordset => 0.24,
 			    DBI => 1.0,
+			    DBSchema::Sample => 0.03,
 			    Text::Template => 1.44,
         		    Whitespace => 1.02
 

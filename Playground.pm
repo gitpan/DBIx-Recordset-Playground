@@ -1,6 +1,5 @@
-package DBIx::Recordset::Cookbook;
+package DBIx::Recordset::Playground;
 
-use 5.008;
 use strict;
 use warnings;
 
@@ -28,7 +27,7 @@ our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
 our @EXPORT = qw(	
 );
 
-our $VERSION = '0.06';
+our $VERSION = '0.07';
 
 
 # Preloaded methods go here.
@@ -58,7 +57,7 @@ able to create a database and manipulate it, all from DBIx::Recordset.
 
 Let the games begin!
 
-=head1 CREATE THE DATABASE
+=head1 Preliminaries:
 
 =head2 Our Generic Connection Script:
 
@@ -81,6 +80,9 @@ Let the games begin!
    my $attr = { RaiseError => 1 };
    my ($user, $pass);
  
+     $user='data';
+     $pass='data';
+ 
    $dbh = DBI->connect($dsn, $user, $pass, $attr) or die $DBI::errstr;
  
  }
@@ -89,8 +91,12 @@ Let the games begin!
      ( '!DataSource' => dbh() );
  }
  
- sub person_table {
-     ( '!Table'      => 'person' );
+ sub author_table {
+     ( '!Table'      => 'authors' );
+ }
+ 
+ sub royalty_table {
+     ( '!Table'      => 'roysched' );
  }
  
  
@@ -98,82 +104,31 @@ Let the games begin!
  1;
 
 
-=head2 And Now the Script to Create the Tables:
+
+=head2 Create and Populate the Database
+
+The schema description is given in:
+
+L<DBSchema::Sample|DBSchema::Sample>.
 
  #
- #   scripts/create-tables.pl
+ #   scripts/build-database.pl
  #
  
  require 'dbconn.pl';
  use DBI;
- 
- my $person_tbl =<<EOSQL;
- CREATE TABLE IF NOT EXISTS person (
- id          mediumint unsigned not null primary key auto_increment,
- name        varchar(40) not null,
- age         varchar(255) not null,
- country_id  mediumint unsigned
- )
- EOSQL
- 
- my $country_tbl =<<EOSQL;
- CREATE TABLE IF NOT EXISTS country (
- id          mediumint unsigned not null primary key auto_increment,
- name        varchar(40) not null
- )
- EOSQL
- 
+ use strict;
+ use DBSchema::Sample;
  
  my $dbh = dbh();
+ my $sql = DBSchema::Sample->sql;
  
- 
- $dbh->do('use test');
- $dbh->do($person_tbl);
- $dbh->do($country_tbl);
-
-
-=head2 POPULATE THE DATABASE
-
- #
- #   scripts/populate-person.pl
- #
- 
- require 'dbconn.pl';
- use DBI;
- 
- use Data::Dumper;
- 
- 
- my @data = (
- 	    [qw(bill   25 ru)],
- 	    [qw(bob    30 de)],
- 	    [qw(bob    30 ca)],
- 	    [qw(bob    30 nz)],
- 	    [qw(jane   18 us)],
- 	    [qw(jane   48 dk)],
- 	    [qw(jane   22 nw)],
- 	    [qw(lazlo  40 hu)],
- 	    [qw(tony   40 uk)],
- 	    [qw(tony   21 yg)],
- 	    [qw(tony   22 ie)]
- 	    );
- 
- ### no insert whole array ref huh?
- 
- for (@data) {
- 
-     my %h = (
- 	     name      => $_->[0],
- 	     age       => $_->[1],
- 	     country   => $_->[2]
- 	     );
- 
-     warn Dumper(\%h);
- 
-   DBIx::Recordset -> Insert ({%h,
- 			      ('!DataSource'   =>  dbh(),
- 			       '!Table'        =>  'person')});
+ for (@$sql) {
+     warn $_;
+     $dbh->do($_);
  }
+
+
 
 
 =head1 SYNOPSIS
@@ -181,25 +136,52 @@ Let the games begin!
 =head2 Selecting data with where criteria in a hash (formdata? :))
 
  #
- #   scripts/select-using-hash.pl
+ #   scripts/select-using-href.pl
  #
  
  require 'dbconn.pl';
  use DBIx::Recordset;
+ use strict;
  
- use vars qw(*rs);
+ use vars qw(*set);
  
- *rs =
-   DBIx::Recordset -> Search ({
+ *set =
+   DBIx::Recordset -> Search
+   ({
+     au_lname => 'Ringer',
+     state    => 'UT',
+     conn_dbh(), author_table()
  
-       name => 'bob',
-       age  => 30,
-       conn_dbh(), person_table()
+    });
  
-       });
+ warn 1.0;
+ #print Dumper(\@set); # results not fetched because FetchsizeWarn not disabled
  
- #print Dumper(\@rs); # results not fetched --- you get nothing!
- print Dumper($rs[0]{name});
+ warn 1.01;
+ $DBIx::Recordset::FetchsizeWarn = 0;
+ print Dumper(\@set); # results are now fetched
+ 
+ warn 1.1;
+ print Dumper(\%set); # only print current record
+ 
+ warn 1.2; # Here we print all
+ $set->Reset;
+ while ($set->Next) {
+     print Dumper(\%set)
+ }
+ 
+ 
+ warn 1.3; # Here we print all in another way
+ $set->Reset;
+ while (my $rec = $set->Next) {
+     print Dumper($rec);
+ }
+ 
+ warn 1.4; # This doesnt work either <... why?>
+ $set->Reset;
+ while ($set->MoreRecords) {
+     print Dumper($set->Next);
+ }
 
 
 =head2 Selecting data where values are in an arrayref:
@@ -209,52 +191,58 @@ Let the games begin!
  #
  
  require 'dbconn.pl';
+ #use Data::Dumper;
  use DBIx::Recordset;
+ use strict;
  
  use vars qw(*rs);
  
  *rs =
    DBIx::Recordset -> Search ({
  
-       '$where'   => 'name = ? and age = ?',
-       '$values'  => ['bob',  30],
-       conn_dbh(), person_table()
+       '$where'   => 'au_lname = ? and state = ?',
+       '$values'  => ['Ringer',  "UT"],
+       conn_dbh(), author_table()
  
        });
  
- #print Dumper(\@rs); # results not fetched --- you get nothing!
- print Dumper($rs[0]{name});
+ # only works if FetchsizeWarn siabled
+ # print Dumper($rs[0]);
+ 
+ warn $rs{au_fname};
 
 
-=head2 Using Manual Indexing
+=head2 Update
 
  #
- #   scripts/synopsis-manual-indexing.pl
+ #   scripts/synopsis-update.pl
  #
  
  require 'dbconn.pl';
+ #use Data::Dumper;
  use DBIx::Recordset;
  use strict;
- use vars qw(*set);
  
- my %where = (name => 'jane');
+ use vars qw(*rs);
  
- *set =
-   DBIx::Recordset -> Search ({
+ *rs =
+   DBIx::Recordset -> Setup ({
  
-       %where,
-       conn_dbh(), person_table()
+       conn_dbh(), author_table()
  
        });
  
+ $rs->Update
+   (
+    {
+     state => 'Utah'
+    },
+    {
+     state => 'UT'
+    }
+   );
  
- print "A1: ", $set[0]{age}, $/;
- print "A2: ", $set[1]{age}, $/;
- 
- # now to use the hash of the current record:
- 
- print "N: ", $set{name}, $/;
- print "A: ", $set{age}, $/;
+ # It worked. The field is truncated to 2 chars
 
 
 =head2 Reusing a Set Object to do Another Search:
@@ -269,23 +257,25 @@ Let the games begin!
  use vars qw(*set);
  
  *set =
-   DBIx::Recordset -> Search ({
+   DBIx::Recordset -> Search
+   ({
  
-       '$where'   => 'name = ? and age = ?',
-       '$values'  => ['bob',  30],
-       conn_dbh(), person_table()
+     au_fname => 'Akiko',
+     conn_dbh(), author_table()
  
-       });
+    });
  
  
- print $set[0]{name}, $/;
- print $set[1]{name}, $/;
+ print $set{address}, $/;
+ 
+ # Now do another search
  
  $set->Search({
-     name => 'lazlo'
+ 
+ 	      au_fname => 'Sylvia'
      });
  
- print $set[0]{age}, $/;
+ print $set{address}, $/;
 
 
 =head2 Using C<Next()> to Iterate over a Result Set:
@@ -299,45 +289,46 @@ Let the games begin!
  use strict;
  use vars qw(*set);
  
- my %where = (name => 'tony');
+ my %where = (title_id => 'MC3026');
  
  *set =
    DBIx::Recordset -> Search ({
  
        %where,
-       conn_dbh(), person_table()
+       conn_dbh(), royalty_table()
  
        });
  
  
  while (my $rec = $set->Next) {
-     print $rec->{age}, $/;
+     print $rec->{royalty}, $/;
  }
 
 
 =head3 Using C<Next()> but Using the Implicitly Bound Hash:
 
  #
- #   scripts/using-hash-of-recordset.pl
+ #   scripts/using-implicit-hash.pl
  #
  
  require 'dbconn.pl';
- use Data::Dumper;
  use DBIx::Recordset;
- 
+ use strict;
  use vars qw(*set);
+ 
+ my %where = (title_id => 'MC3026');
  
  *set =
    DBIx::Recordset -> Search ({
  
-       name => 'jane',
-       conn_dbh(), person_table()
+       %where,
+       conn_dbh(), royalty_table()
  
        });
  
  
  while ($set->Next) {
-     print Dumper(\%set);
+     print $set{royalty}, $/;
  }
 
 
@@ -650,7 +641,7 @@ see also B<DATA ACCESS> below.
 By default, the hash returned by the setup function is tied to the
 current record. 
 
-B<... this is already confusing. by "Setup Function" I presume he
+<... this is already confusing. by "Setup Function" I presume he
 means the function SetupObject and only this function? Or does he mean
 any function which calls SetupObject. Such as Search(), Insert(),
 Update(), Delete(). 

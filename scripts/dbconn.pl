@@ -13,6 +13,9 @@ sub dbh {
   my $attr = { RaiseError => 1 };
   my ($user, $pass);
 
+    $user='data';
+    $pass='data';
+
   $dbh = DBI->connect($dsn, $user, $pass, $attr) or die $DBI::errstr;
 
 }
@@ -21,8 +24,12 @@ sub conn_dbh {
     ( '!DataSource' => dbh() );
 }
 
-sub person_table {
-    ( '!Table'      => 'person' );
+sub author_table {
+    ( '!Table'      => 'authors' );
+}
+
+sub royalty_table {
+    ( '!Table'      => 'roysched' );
 }
 
 

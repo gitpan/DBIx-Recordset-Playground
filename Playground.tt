@@ -1,6 +1,5 @@
-package DBIx::Recordset::Cookbook;
+package DBIx::Recordset::Playground;
 
-use 5.008;
 use strict;
 use warnings;
 
@@ -28,7 +27,7 @@ our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
 our @EXPORT = qw(	
 );
 
-our $VERSION = '0.06';
+our $VERSION = '0.07';
 
 
 # Preloaded methods go here.
@@ -58,33 +57,36 @@ able to create a database and manipulate it, all from DBIx::Recordset.
 
 Let the games begin!
 
-=head1 CREATE THE DATABASE
+=head1 Preliminaries:
 
 =head2 Our Generic Connection Script:
 
 <tt>pod_code "scripts/dbconn.pl", 1</tt>
 
-=head2 And Now the Script to Create the Tables:
 
-<tt>pod_code "scripts/create-tables.pl", 1</tt>
+=head2 Create and Populate the Database
 
-=head2 POPULATE THE DATABASE
+The schema description is given in:
 
-<tt>pod_code "scripts/populate-person.pl", 1</tt>
+L<DBSchema::Sample|DBSchema::Sample>.
+
+<tt>pod_code "scripts/build-database.pl", 1</tt>
+
+
 
 =head1 SYNOPSIS
 
 =head2 Selecting data with where criteria in a hash (formdata? :))
 
-<tt>pod_code "scripts/select-using-hash.pl", 1</tt>
+<tt>pod_code "scripts/select-using-href.pl", 1</tt>
 
 =head2 Selecting data where values are in an arrayref:
 
 <tt>pod_code "scripts/select-using-aref.pl", 1</tt>
 
-=head2 Using Manual Indexing
+=head2 Update
 
-<tt>pod_code "scripts/synopsis-manual-indexing.pl", 1</tt>
+<tt>pod_code "scripts/synopsis-update.pl", 1</tt>
 
 =head2 Reusing a Set Object to do Another Search:
 
@@ -96,7 +98,7 @@ Let the games begin!
 
 =head3 Using C<Next()> but Using the Implicitly Bound Hash:
 
-<tt>pod_code "scripts/using-hash-of-recordset.pl", 1</tt>
+<tt>pod_code "scripts/using-implicit-hash.pl", 1</tt>
 
 =head1
 
@@ -407,7 +409,7 @@ see also B<DATA ACCESS> below.
 By default, the hash returned by the setup function is tied to the
 current record. 
 
-B<... this is already confusing. by "Setup Function" I presume he
+<... this is already confusing. by "Setup Function" I presume he
 means the function SetupObject and only this function? Or does he mean
 any function which calls SetupObject. Such as Search(), Insert(),
 Update(), Delete(). 

@@ -4,20 +4,22 @@ use DBIx::Recordset;
 use vars qw(*set);
 
 *set =
-  DBIx::Recordset -> Search ({
+  DBIx::Recordset -> Search
+  ({
 
-      '$where'   => 'name = ? and age = ?',
-      '$values'  => ['bob',  30],
-      conn_dbh(), person_table()
+    au_fname => 'Akiko',
+    conn_dbh(), author_table()
 
-      });
+   });
 
 
-print $set[0]{name}, $/;
-print $set[1]{name}, $/;
+print $set{address}, $/;
+
+# Now do another search
 
 $set->Search({
-    name => 'lazlo'
+
+	      au_fname => 'Sylvia'
     });
 
-print $set[0]{age}, $/;
+print $set{address}, $/;
