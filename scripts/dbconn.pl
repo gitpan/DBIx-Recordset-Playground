@@ -1,22 +1,19 @@
 use Data::Dumper;
 use DBIx::Recordset;
 
+# change to match your local connection parameters
+
+my  $dsn = 'DBI:mysql:database=test;host=localhost';
+my  $user='data';
+my  $pass='data';
+my  $attr= { RaiseError => 1 };
+
+
 sub dbh {
     *DBIx::Recordset::LOG   = \*STDOUT;
     $DBIx::Recordset::Debug = 2;
 
-#my  $dsn = 'DBI:mysqlPP:database_name=test;host=localhost';
-#    my  $dsn = 'DBI:mysqlPP:database=test;host=localhost';
-    my  $dsn = 'DBI:mysql:database=test;host=localhost';
-    our $dbh;
-
-  my $attr = { RaiseError => 1 };
-  my ($user, $pass);
-
-    $user='data';
-    $pass='data';
-
-  $dbh = DBI->connect($dsn, $user, $pass, $attr) or die $DBI::errstr;
+    my $dbh = DBI->connect($dsn, $user, $pass, $attr) or die $DBI::errstr;
 
 }
 

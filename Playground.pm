@@ -15,7 +15,7 @@ our @ISA = qw(Exporter);
 # names by default without a very good reason. Use EXPORT_OK instead.
 # Do not simply export all your public functions/methods/constants.
 
-# This allows declaration	use DBIx::Recordset::Cookbook ':all';
+# This allows declaration	use DBIx::Recordset::Playground ':all';
 # If you do not need this, moving things directly into @EXPORT or @EXPORT_OK
 # will save memory.
 our %EXPORT_TAGS = ( 'all' => [ qw(
@@ -27,7 +27,7 @@ our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
 our @EXPORT = qw(	
 );
 
-our $VERSION = '0.08';
+our $VERSION = '1.0';
 
 
 # Preloaded methods go here.
@@ -52,10 +52,9 @@ recordset to examine the code to discover how to make usage of recordset
 even simpler. Finally, it serves as a place for me to clarify all the
 areas in the original docs that were a bit confusing to me.
 
-After creating a database using DBSchema::Sample,
+After creating a database using L<DBSchema::Sample|DBSchema::Sample>,
 you will be
-able to manipulate it using  from DBIx::Recordset using the examplesh here.
-
+able to manipulate it using  from DBIx::Recordset using the examples here.
 Let the games begin!
 
 =head1 Preliminaries:
@@ -74,22 +73,19 @@ basics.
  use Data::Dumper;
  use DBIx::Recordset;
  
+ # change to match your local connection parameters
+ 
+ my  $dsn = 'DBI:mysql:database=test;host=localhost';
+ my  $user='data';
+ my  $pass='data';
+ my  $attr= { RaiseError => 1 };
+ 
+ 
  sub dbh {
      *DBIx::Recordset::LOG   = \*STDOUT;
      $DBIx::Recordset::Debug = 2;
  
- #my  $dsn = 'DBI:mysqlPP:database_name=test;host=localhost';
- #    my  $dsn = 'DBI:mysqlPP:database=test;host=localhost';
-     my  $dsn = 'DBI:mysql:database=test;host=localhost';
-     our $dbh;
- 
-   my $attr = { RaiseError => 1 };
-   my ($user, $pass);
- 
-     $user='data';
-     $pass='data';
- 
-   $dbh = DBI->connect($dsn, $user, $pass, $attr) or die $DBI::errstr;
+     my $dbh = DBI->connect($dsn, $user, $pass, $attr) or die $DBI::errstr;
  
  }
  
@@ -362,32 +358,6 @@ L<DBSchema::Sample|DBSchema::Sample>.
 
 =head1
 
-DBIx::Recordset is a perl module for abstraction and simplification of
-database access.
-
-The goal is to make standard database access (select/insert/update/delete)
-easier to handle and independent of the underlying DBMS. While special 
-attention is
-paid to web applications, making it possible to handle state-less access
-and process the posted data of formfields, DBIx::Recordset is not
-limited to such applications.
-
-B<DBIx::Recordset> uses the DBI API to access the database, so it
-should work with 
-every database for which a DBD driver is available (see also DBIx::Compat).
-
-Most public functions take a hash reference as parameter, which makes it simple
-to supply various different arguments to the same function. The
-parameter hash 
-can also be taken from a hash containing posted formfields like those
-available with 
-CGI.pm, mod_perl, HTML::Embperl and others.
-
-Before using a recordset it is necessary to setup an object. Of course the
-setup step can be made with the same function call as the first
-database access, 
-but it can also be handled separately.
-
 Most functions which set up an object return a B<typeglob>. A typeglob
 in Perl is an  
 object which holds pointers to all datatypes with the same
@@ -432,9 +402,35 @@ Let's look at a query and it's results:
  | PS3333   | P3087a   |
  +----------+----------+
 
+Or in English:
+
+  What was the title and purchase order number for all sales whose order quantity was 15.
+
 Now let's see it rendered in Recordset:
 
-Program fragment delivered error ``couldnt open file : No such file or directory at tt.pl line 16, <F> line 220.''
+ #
+ #   scripts/join-tabrelation.pl
+ #
+ 
+ require 'dbconn.pl';
+ use DBIx::Recordset;
+ 
+ use vars qw(*set);
+ 
+ *set =
+   DBIx::Recordset -> Search
+   ({
+     '!TabRelation' => 'sales.sonum = salesdetails.sonum',
+     'qty_ordered'  => 15,
+     '$fields'      => 'title_id,ponum',
+     conn_dbh(),
+     tblnm('sales,salesdetails')
+    });
+ 
+ 
+ while ( $set->Next) {
+     print join "\t", $set{title_id}, $set{ponum}, $/;
+ }
 
 
 =item B<!TabJoin>
