@@ -28,7 +28,7 @@ our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
 our @EXPORT = qw(	
 );
 
-our $VERSION = '0.05';
+our $VERSION = '0.06';
 
 
 # Preloaded methods go here.
@@ -735,22 +735,187 @@ to the user.
 	}
 
 Both filters convert a date in the format dd.mm.yy to the database format 19yymmdd and
-vice versa. The first one does this for all fields of the type SQL_DATE, the second one
+vice versa. The first one does this for all fields of the type
+SQL_DATE, the second one 
 does this for the fields with the name datefield.
 
-The B<!Filter> parameter can also be passed to the function B<TableAttr> of the B<DBIx::Database>
-object. In this case it applies to all DBIx::Recordset objects which use
+The B<!Filter> parameter can also be passed to the function
+B<TableAttr> of the B<DBIx::Database> 
+object. In this case it applies to all DBIx::Recordset objects which
+use 
 these tables.
 
-A third parameter can be optionally specified. It could be set to C<DBIx::Recordset::rqINSERT>,
-C<DBIx::Recordset::rqUPDATE>, or the sum of both. If set, the InputFunction (which is called during
-UPDATE or INSERT) is always called for this field in updates and/or inserts depending on the value.
+B<... aha! so this is the second place so far that we have a means of
+globally affecting all recordset object using tables. This means less
+needs be done in pure OOP and more can be done by Recordset, for
+better or worse>
+
+A third parameter can be optionally specified. It could be set to
+C<DBIx::Recordset::rqINSERT>, 
+C<DBIx::Recordset::rqUPDATE>, or the sum of both. If set, the
+InputFunction (which is called during 
+UPDATE or INSERT) is always called for this field in updates and/or
+inserts depending on the value. 
+
+B<... what InputFunction is he talking about?>
+
 If there is no data specified for this field
-as an argument to a function which causes an UPDATE/INSERT, the InputFunction
+as an argument to a function which causes an UPDATE/INSERT, the
+InputFunction 
 is called with an argument of B<undef>.
 
 During UPDATE and INSERT the input function gets either the string 'insert' or 'update' passed as
 second parameter.
+
+=item B<!LinkName>
+
+This allows you to get a clear text description of a linked table,
+instead of (or in addition to) the !LinkField. For example, if you
+have a record with all your bills, and each record contains a customer
+number, setting !LinkName DBIx::Recordset can automatically retrieve
+the name of the customer instead of (or in addition to) the bill
+record itself.
+
+=over 4
+
+=item 1 select additional fields
+
+This will additionally select all fields given in B<!NameField> of the Link or the table
+attributes (see TableAttr).
+
+=item 2 build name in uppercase of !MainField
+
+This takes the values of B<!NameField> of the Link or the table attributes (see 
+TableAttr)
+and joins the content of these fields together into a new field, which has the same name
+as the !MainField, but in uppercase.
+
+
+=item 2 replace !MainField with the contents of !NameField
+
+Same as 2, but the !MainField is replaced with "name" of the linked record.
+
+=back
+
+See also B<!Links> and B<WORKING WITH MULTIPLE TABLES> below
+
+=item B<!Links>
+
+This parameter can be used to link multiple tables together. It takes a
+reference to a hash, which has - as keys, names for a special B<"linkfield">
+and - as value, a parameter hash. The parameter hash can contain all the
+B<Setup parameters>. The setup parameters are taken to construct a new
+recordset object to access the linked table. If !DataSource is omitted (as it
+normally should be), the same DataSource (and database handle), as the
+main object is taken. There are special parameters which can only 
+occur in a link definition (see next paragraph). For a detailed description of
+how links are handled, see B<WORKING WITH MULTIPLE TABLES> below.
+
+=head2 Link Parameters
+
+=item B<!MainField>
+
+The B<!MailField> parameter holds a fieldname which is used to retrieve
+a key value for the search in the linked table from the main table.
+If omitted, it is set to the same value as B<!LinkedField>.
+
+=item B<!LinkedField>
+
+The fieldname which holds the key value in the linked table.
+If omitted, it is set to the same value as B<!MainField>.
+
+=item B<!NameField>
+
+This specifies the field or fields which will be used as a "name" for the destination table. 
+It may be a string or a reference to an array of strings.
+For example, if you link to an address table, you may specify the field "nickname" as the 
+name field
+for that table, or you may use ['name', 'street', 'city'].
+
+Look at B<!LinkName> for more information.
+
+
+B<... this is very confusing... there is some stuff in test.pl in the
+Recorset distribution which does this... but boy is it confusing!>
+
+=item B<!DoOnConnect>
+
+You can give an SQL Statement (or an array reference of SQL
+statements), that will be executed every time, just after an connect
+to the db. As third possibilty you can give an hash reference. After
+every successful connect, DBIx::Recordset excutes the statements, in
+the element which corresponds to the name of the driver. '*' is
+executed for all drivers.
+
+=item B<!Default>
+
+Specifies default values for new rows that are inserted via hash or array access. The Insert
+method ignores this parameter.
+
+=item B<!TieRow>
+
+Setting this parameter to zero will cause DBIx::Recordset to B<not> tie the returned rows to
+an DBIx::Recordset::Row object and instead returns an simple hash. The benefit of this is
+that it will speed up things, but you aren't able to write to such an row, nor can you use
+the link feature with such a row.
+
+=item B<!Debug>
+
+Set the debug level. See DEBUGGING.
+
+
+=item B<!PreFetch>
+
+Only for tieing a hash! Gives an where expression (either as string or as hashref) 
+that is used to prefetch records from that
+database. All following accesses to the tied hash only access this prefetched data and
+don't execute any database queries. See C<!Expires> how to force a refetch.
+Giving a '*' as value to C<!PreFetch> fetches the whole table into memory.
+
+ The following example prefetches all record with id < 7:
+
+ tie %dbhash, 'DBIx::Recordset::Hash', {'!DataSource'   =>  $DSN,
+                                        '!Username'     =>  $User,
+                                        '!Password'     =>  $Password,
+                                        '!Table'        =>  'foo',
+                                        '!PreFetch'     =>  {
+                                                             '*id' => '<',
+                                                             'id' => 7
+                                                            },
+                                        '!PrimKey'      =>  'id'} ;
+
+ The following example prefetches all records:
+
+ tie %dbhash, 'DBIx::Recordset::Hash', {'!DataSource'   =>  $DSN,
+                                        '!Username'     =>  $User,
+                                        '!Password'     =>  $Password,
+                                        '!Table'        =>  'bar',
+                                        '!PreFetch'     =>  '*',
+                                        '!PrimKey'      =>  'id'} ;
+
+=item B<!Expires>
+
+Only for tieing a hash! If the values is numeric, the prefetched data will be refetched 
+is it is older then the given number of seconds. If the values is a CODEREF the function
+is called and the data is refetched is the function returns true.
+
+=item B<!MergeFunc>
+
+Only for tieing a hash! Gives an reference to an function that is called when more then one
+record for a given hash key is found to merge the records into one. The function receives
+a refence to both records a arguments. If more the two records are found, the function is
+called again for each following record, which is already merged data as first parameter.
+
+ The following example sets up a hash, that, when more then one record with the same id is
+ found, the field C<sum> is added and the first record is returned, where the C<sum> field
+ contains the sum of B<all> found records:
+
+ tie %dbhash, 'DBIx::Recordset::Hash', {'!DataSource'   =>  $DSN,
+                                        '!Username'     =>  $User,
+                                        '!Password'     =>  $Password,
+                                        '!Table'        =>  'bar',
+                                        '!MergeFunc'    =>  sub { my ($a, $b) = @_ ; $a->{sum} += $b->{sum} ; },
+                                        '!PrimKey'      =>  'id'} ;
 
 
 

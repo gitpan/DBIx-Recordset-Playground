@@ -20,7 +20,7 @@ open L, "scripts/LOCAL_MANIFEST";
 print M $_ while <L>;
 
 
-print <<EOTEXT;
+print <<'EOTEXT';
 Now goto a cygwin shell and type
 
   perl Makefile.PL PREFIX=$PREFIX
