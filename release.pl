@@ -27,4 +27,5 @@ print M $_, $/ while <scripts/*.pl>;
 
 print `perl Makefile.PL PREFIX=$ENV{PREFIX}`;
 print `make install`;
+print `rm *.tar.gz` ;
 print `make tardist`;

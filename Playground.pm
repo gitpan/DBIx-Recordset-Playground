@@ -24,7 +24,7 @@ our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
 our @EXPORT = qw(	
 );
 
-our $VERSION = sprintf '%s', q$Revision: 1.9 $ =~ /Revision:\s+(\S+)\s+/ ;
+our $VERSION = sprintf '%s', q$Revision: 1.10 $ =~ /Revision:\s+(\S+)\s+/ ;
 
 # Preloaded methods go here.
 
@@ -147,7 +147,7 @@ which is built via:
 
 =head2 Building Where Clauses
 
-=head3 field op A OR field op B or file op C ...
+=head3 $field $cmp A OR $field $cmp B or $field $cmp C ...
 
  #
  #   scripts/build-where/or-conjunct.pl
@@ -170,6 +170,40 @@ which is built via:
      '!Table'   => 'authors',
      '*phone'   => 'LIKE',
        phone    => ( join "\t", map { "$_%" } @area_code ),
+    });
+ 
+ while ($set->Next) {
+     print Dumper(\%set)
+ }
+
+
+=head4 Specialization of above when A, B, C not tab separated
+
+ #
+ #   scripts/build-where/or-conjunct-valuesplit.pl
+ #
+ 
+ require '../dbconn.pl';
+ use DBIx::Recordset;
+ use strict;
+ 
+ use vars qw(*set);
+ 
+ # Find all authors whose phone number is in area code 801 or 415
+ 
+ my $zip = "94705
+ 
+ 84152\t94609";
+ 
+ 
+ 
+ *set =
+   DBIx::Recordset -> Search
+   ({
+     conn_dbh(),
+     '!Table'   => 'authors',
+      zip      => $zip,
+     '$valuesplit' => '\s+'
     });
  
  while ($set->Next) {

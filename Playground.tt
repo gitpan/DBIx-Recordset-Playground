@@ -24,7 +24,7 @@ our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
 our @EXPORT = qw(	
 );
 
-our $VERSION = sprintf '%s', q$Revision: 1.9 $ =~ /Revision:\s+(\S+)\s+/ ;
+our $VERSION = sprintf '%s', q$Revision: 1.10 $ =~ /Revision:\s+(\S+)\s+/ ;
 
 # Preloaded methods go here.
 
@@ -77,9 +77,13 @@ which is built via:
 
 =head2 Building Where Clauses
 
-=head3 field op A OR field op B or file op C ...
+=head3 $field $cmp A OR $field $cmp B or $field $cmp C ...
 
 <tt>pod_code "scripts/build-where/or-conjunct.pl", 1</tt>
+
+=head4 Specialization of above when A, B, C not tab separated
+
+<tt>pod_code "scripts/build-where/or-conjunct-valuesplit.pl", 1</tt>
 
 =head2 Selecting data with where criteria in a hash
 
