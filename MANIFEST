@@ -32,6 +32,7 @@ scripts/prefetch-expire.pl
 scripts/prefetch-insert.pl
 scripts/select-using-aref.pl
 scripts/select-using-href.pl
+scripts/select-using-query.pl
 scripts/setup-another-update.pl
 scripts/synopsis-manual-indexing.pl
 scripts/synopsis-update.pl

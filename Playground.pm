@@ -24,7 +24,7 @@ our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
 our @EXPORT = qw(	
 );
 
-our $VERSION = sprintf '%s', q$Revision: 1.10 $ =~ /Revision:\s+(\S+)\s+/ ;
+our $VERSION = sprintf '%s', q$Revision: 1.12 $ =~ /Revision:\s+(\S+)\s+/ ;
 
 # Preloaded methods go here.
 
@@ -147,7 +147,7 @@ which is built via:
 
 =head2 Building Where Clauses
 
-=head3 $field $cmp A OR $field $cmp B or $field $cmp C ...
+=head3 FIELD $cmp A OR FIELD $cmp B or FIELD $cmp C ...
 
  #
  #   scripts/build-where/or-conjunct.pl
@@ -189,7 +189,7 @@ which is built via:
  
  use vars qw(*set);
  
- # Find all authors whose phone number is in area code 801 or 415
+ # Find all authors whose zip is 94705, 94152 or 94609
  
  my $zip = "94705
  
@@ -289,6 +289,34 @@ This is useful when your have formdata in a hash for instance.
  # print Dumper($rs[0]) only works if FetchsizeWarn siabled
  
  warn $rs{au_fname};
+
+
+=head2 Selecting data using a full SQL query
+
+In Recordset > 0.24, one can input a full query for processing:
+
+ #
+ #   scripts/select-using-query.pl
+ #
+ 
+ require 'dbconn.pl';
+ use DBIx::Recordset;
+ use strict;
+ 
+ use vars qw(*set);
+ 
+ *set =
+   DBIx::Recordset -> Search
+   ({
+     '!DataSource' => dbh(),
+     '$max' => 4,
+     '!Query' => 'SELECT * FROM AUTHORS'
+    });
+ 
+ while ($set->Next) {
+     print Dumper(\%set)
+ }
+ 
 
 
 =head2 Update
