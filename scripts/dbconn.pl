@@ -3,9 +3,9 @@ use DBIx::Recordset;
 
 # change to match your local connection parameters
 
-my  $dsn = 'DBI:mysql:database=test;host=localhost';
-my  $user='data';
-my  $pass='data';
+my  $dsn = 'DBI:mysql:database=princepawn;host=localhost';
+my  $user='princepawn';
+my  $pass='money1';
 my  $attr= { RaiseError => 1 };
 
 

@@ -27,7 +27,7 @@ our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
 our @EXPORT = qw(	
 );
 
-our $VERSION = '1.0';
+our $VERSION = '1.1';
 
 
 # Preloaded methods go here.
@@ -75,9 +75,9 @@ basics.
  
  # change to match your local connection parameters
  
- my  $dsn = 'DBI:mysql:database=test;host=localhost';
- my  $user='data';
- my  $pass='data';
+ my  $dsn = 'DBI:mysql:database=princepawn;host=localhost';
+ my  $user='princepawn';
+ my  $pass='money1';
  my  $attr= { RaiseError => 1 };
  
  
@@ -134,29 +134,14 @@ The schema description is given in:
 
 L<DBSchema::Sample|DBSchema::Sample>.
 
- #
- #   scripts/build-database.pl
- #
- 
- require 'dbconn.pl';
- use DBI;
- use strict;
- use DBSchema::Sample;
- 
- my $dbh = dbh();
- my $sql = DBSchema::Sample->sql;
- 
- for (@$sql) {
-     warn $_;
-     $dbh->do($_);
- }
+which is built via:
 
-
+  perl -MDBSchema::Sample -e load
 
 
 =head1 SYNOPSIS
 
-=head2 Selecting data with where criteria in a hash (formdata? :))
+=head2 Selecting data with where criteria in a hash
 
  #
  #   scripts/select-using-href.pl
@@ -206,6 +191,8 @@ L<DBSchema::Sample|DBSchema::Sample>.
      print Dumper($set->Next);
  }
 
+
+This is useful when your have formdata in a hash for instance.
 
 =head2 Selecting data where values are in an arrayref:
 
@@ -370,11 +357,9 @@ B<array> and a B<hash> at the same time.
 
 B<... concerns about package variables and mod_perl ...>
 
-
-If you don't like the idea of using typglobs you can also set up the object,
-array and hash separately, or just set the ones you need.
-
-B<... let's give an example of this ... >
+However, most if not all Recordset functionality is useable from the object
+alone, thus it suffices to setup the object by returning a reference into
+a lexical or package-scoped scalar.
 
 
 =head1 ARGUMENTS
@@ -438,16 +423,34 @@ Now let's see it rendered in Recordset:
 !TabJoin allows you to specify an B<INNER/RIGHT/LEFT JOIN> which is
 used in a B<SELECT> statement. (See also L<!TabRelation>.)
 
-  Example
+ #
+ #   scripts/join-tabrelation.pl
+ #
+ 
+ require 'dbconn.pl';
+ use DBIx::Recordset;
+ 
+ use vars qw(*set);
+ 
+ *set =
+   DBIx::Recordset -> Search
+   ({
+     '!TabRelation' => 'sales.sonum = salesdetails.sonum',
+     'qty_ordered'  => 15,
+     '$fields'      => 'title_id,ponum',
+     conn_dbh(),
+     tblnm('sales,salesdetails')
+    });
+ 
+ 
+ while ( $set->Next) {
+     print join "\t", $set{title_id}, $set{ponum}, $/;
+ }
 
-  '!Table'   => 'tab1, tab2',
-  '!TabJoin' => 'tab1 LEFT JOIN tab2 ON	(tab1.id=tab2.id)',
-  'name'     => 'foo'
 
-  This will generate the following SQL statement:
-
-  SELECT * FROM tab1 LEFT JOIN tab2 ON	(tab1.id=tab2.id) WHERE name = 
-'foo' ;
+  SELECT au_fname, au_lname, pub_name 
+    FROM authors left outer join publishers 
+      ON authors.city = publishers.city;
 
 =item B<!PrimKey>
 

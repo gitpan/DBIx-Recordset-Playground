@@ -20,6 +20,7 @@ scripts/create-tables2.pl
 scripts/dbconn.pl
 scripts/depopulate-person.pl
 scripts/do-another-search.pl
+scripts/join-tabjoin.pl
 scripts/join-tabrelation.pl
 scripts/manifest-files.pl
 scripts/populate-person.pl
@@ -31,3 +32,4 @@ scripts/setup-another-update.pl
 scripts/synopsis-manual-indexing.pl
 scripts/synopsis-update.pl
 scripts/using-implicit-hash.pl
+META.yml                                Module meta-data (added by MakeMaker)
