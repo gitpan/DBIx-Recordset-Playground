@@ -20,6 +20,7 @@ scripts/create-tables2.pl
 scripts/dbconn.pl
 scripts/depopulate-person.pl
 scripts/do-another-search.pl
+scripts/hash-as-row-key.pl
 scripts/join-tabjoin.pl
 scripts/join-tabrelation.pl
 scripts/manifest-files.pl

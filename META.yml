@@ -1,6 +1,7 @@
+# http://module-build.sourceforge.net/META-spec.html
 #XXXXXXX This is a prototype!!!  It will change in the future!!! XXXXX#
 name:         DBIx-Recordset-Playground
-version:      1.1
+version:      1.2
 version_from: Playground.pm
 installdirs:  site
 requires:
@@ -11,4 +12,4 @@ requires:
     Whitespace:                    1.02
 
 distribution_type: module
-generated_by: ExtUtils::MakeMaker version 6.13
+generated_by: ExtUtils::MakeMaker version 6.16
