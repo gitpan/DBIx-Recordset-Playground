@@ -15,10 +15,10 @@ use vars qw(*rs);
 $rs->Update
   (
    {
-    state => 'Utah'
+    state => 'Utah'   # SET
    },
    {
-    state => 'UT'
+    state => 'UT'     # WHERE
    }
   );
 

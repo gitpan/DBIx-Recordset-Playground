@@ -9,7 +9,7 @@ print $/;
 
 #`cd scripts; ../delete-whitespace.pl; ../manifest-files.pl`;
 
-`tt.pl Playground.tt`;
+`perl tt.pl Playground.tt`;
 rename('Playground.tt-out', 'Playground.pm');
 
 open M, ">MANIFEST";
@@ -18,6 +18,9 @@ open L, "MANIFEST.sans-scripts";
 print M $_ while <L>;
 print M $_, $/ while <scripts/*.pl>;
 
+print `perl Makefile.PL PREFIX=$ENV{PREFIX}`;
+print `make install`;
+print `make tardist`;
 
 print <<'EOTEXT';
 Now goto a cygwin shell and type

@@ -14,7 +14,6 @@ use vars qw(*rs);
 
       });
 
-# only works if FetchsizeWarn siabled
-# print Dumper($rs[0]);
+# print Dumper($rs[0]) only works if FetchsizeWarn siabled
 
 warn $rs{au_fname};

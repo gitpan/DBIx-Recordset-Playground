@@ -7,7 +7,7 @@ WriteMakefile(
     'PREREQ_PM'		=> {
 			    DBIx::Recordset => 0.24,
 			    DBI => 1.0,
-			    DBSchema::Sample => 0.03,
+			    DBSchema::Sample => 0.04,
 			    Text::Template => 1.44,
         		    Whitespace => 1.02
 

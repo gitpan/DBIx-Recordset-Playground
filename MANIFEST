@@ -10,6 +10,9 @@ release.pl
 t/1.t
 tt.pl
 release.pl
+scripts/1-to-n-query.pl
+scripts/3-table-join-link.pl
+scripts/3-table-join-manual.pl
 scripts/all-users-with.pl
 scripts/build-database.pl
 scripts/create-tables.pl
@@ -17,6 +20,7 @@ scripts/create-tables2.pl
 scripts/dbconn.pl
 scripts/depopulate-person.pl
 scripts/do-another-search.pl
+scripts/join-tabrelation.pl
 scripts/manifest-files.pl
 scripts/populate-person.pl
 scripts/populate-person2.pl

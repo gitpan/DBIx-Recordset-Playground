@@ -32,6 +32,27 @@ sub royalty_table {
     ( '!Table'      => 'roysched' );
 }
 
+sub tblnm {
+
+    (
+     '!Table' =>
+     shift()
+    )
+
+}
+
+
+sub print_recordset {
+
+    my $glob = shift;
+    my $set = $glob;
+
+    while ( my $rec = $set->Next )
+      {
+	  print Dumper(\%set);
+      }
+
+}
 
 
 1;

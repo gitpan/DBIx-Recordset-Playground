@@ -27,7 +27,7 @@ our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
 our @EXPORT = qw(	
 );
 
-our $VERSION = '0.07';
+our $VERSION = '0.08';
 
 
 # Preloaded methods go here.
@@ -42,7 +42,7 @@ __END__
 
 =head1 NAME
 
-  DBIx::Recordset::Cookbook - working sample usages of DBIx::Recordset
+  DBIx::Recordset::Playground - working sample usages of DBIx::Recordset
 
 =head1 INTRODUCTION
 
@@ -52,14 +52,20 @@ recordset to examine the code to discover how to make usage of recordset
 even simpler. Finally, it serves as a place for me to clarify all the
 areas in the original docs that were a bit confusing to me.
 
-By working the examples in the order given in this document, you will be
-able to create a database and manipulate it, all from DBIx::Recordset.
+After creating a database using DBSchema::Sample,
+you will be
+able to manipulate it using  from DBIx::Recordset using the examplesh here.
 
 Let the games begin!
 
 =head1 Preliminaries:
 
-=head2 Our Generic Connection Script:
+=head2 Our Generic Connection/Library Script:
+
+This script contains our connection information and a variety of
+convenience subroutines. The existence of these points to how we might
+want to abstract Recordset usage further, once we are comfortable with the
+basics.
 
 <tt>pod_code "scripts/dbconn.pl", 1</tt>
 
@@ -92,7 +98,9 @@ L<DBSchema::Sample|DBSchema::Sample>.
 
 <tt>pod_code "scripts/do-another-search.pl", 1</tt>
 
-=head2 Using C<Next()> to Iterate over a Result Set:
+=head2 Using C<Next()> 
+
+=head3 Using C<Next()> to Iterate over a Result Set:
 
 <tt>pod_code "scripts/all-users-with.pl", 1</tt>
 
@@ -140,144 +148,42 @@ B<array> and a B<hash> at the same time.
 
 B<... concerns about package variables and mod_perl ...>
 
-The object is used to access the object's methods, the array is used to access
-the records currently selected in the recordset and the hash is used to access
-the current record.
 
 If you don't like the idea of using typglobs you can also set up the object,
 array and hash separately, or just set the ones you need.
 
+B<... let's give an example of this ... >
+
 
 =head1 ARGUMENTS
-
-Since most methods take a hash reference as argument, here is a
-description of the valid arguments first.
-
-=head2 Setup Parameters
-
-All parameters starting with an '!' are B<only> recognized at setup time.
-B<If you specify them in later function calls they will be ignored.>
-Note: You can also preset these parameters with the TableAttr method of 
-DBIx::Database.  This allows you to setup most parameters
-for the whole database once and they will be use every time you create a new
-DBIx::Recordset object, without specifying it every time.
-
-=item B<!DataSource>
-
-Specifies the database to which to connect. This information can be given in
-the following ways:
-
-=over 4
-
-=item a DBI database handle
-
-Uses a given database handle.
-
-=item Driver/DB/Host.
-
-Same as the first parameter to the DBI connect function.
-
-=item DBIx::Recordset object
-
-Takes the same database handle as the given DBIx::Recordset object.
-
-=item DBIx::Database object
-
-Takes Driver/DB/Host from the given database object. See L<DBIx::Database> 
-for details about DBIx::Database object. When using more than one Recordset
-object, this is the most efficient method.
-
-=item DBIx::Database object name
-
-Takes Driver/DB/Host from the database object which is saved under
-the given name ($saveas parameter to DBIx::Database -> new)
-
-
-=back
-
-=item B<!Table>
-
-Tablename. Multiple tables are comma-separated.
-
-
-=item B<!Username>
-
-Username. Same as the second parameter to the DBI connect function.
-
-=item B<!Password>
-
-Password. Same as the third parameter to the DBI connect function.
-
-=item B<!DBIAttr>
-
-Reference to a hash which holds the attributes for the DBI connect
-function. See perldoc DBI for a detailed description.
-
-
-=item B<!Fields>
-
-Fields which should be returned by a query. If you have specified multiple
-tables the fieldnames should be unique. If the names are not unique you must
-specify them along with the tablename (e.g. tab1.field).
-
-
-NOTE 1: Fieldnames specified with !Fields can't be overridden. If you plan
-to use other fields with this object later, use $Fields instead.
-
-NOTE 2: The keys for the returned hash normally don't have a table part.
-Only the fieldname part forms the key. (See !LongNames for an exception.)
-
-NOTE 3: Because the query result is returned in a hash, there can only be
-one out of multiple fields with the same name fetched at once.
-If you specify multiple fields with the same name, only one is returned
-from a query. Which one this actually is depends on the DBD driver.
-(See !LongNames for an exception.)
-
-NOTE 4: Some databases (e.g. mSQL) require you to always qualify a fieldname
-with a tablename if more than one table is accessed in one query.
-
-=item B<!TableFilter>
-
-The TableFilter parameter specifies which tables should be honoured
-when DBIx::Recordset searches for links between tables (see
-below). When given as parameter to DBIx::Database it filters for which
-tables DBIx::Database retrieves metadata. Only thoses tables are used
-which starts with prefix given by C<!TableFilter>. Also the DBIx::Recordset
-link detection tries to use this value as a prefix of table names, so
-you can leave out this prefix when you write a fieldname that should
-be detected as a link to another table.
-
-=item B<!LongNames>
-
-When set to 1, the keys of the hash returned for each record not only
-consist of the fieldnames, but are built in the form table.field.
-
-=item B<!Order>
-
-Fields which should be used for ordering any query. If you have specified multiple
-tables the fieldnames should be unique. If the names are not unique you must
-specify them among with the tablename (e.g. tab1.field).
-
 
 NOTE 1: Fieldnames specified with !Order can't be overridden. If you plan
 to use other fields with this object later, use $order instead.
 
 B<... of course the question being how to do ascending and descending>
 
+=head1 WORKING WITH MULTIPLE TABLES
+
 =item B<!TabRelation>
 
 Condition which describes the relation between the given tables
 (e.g. tab1.id = tab2.id) (See also L<!TabJoin>.)
 
-  Example
+Let's look at a query and it's results:
 
-  '!Table'       => 'tab1, tab2',
-  '!TabRelation' => 'tab1.id=tab2.id',
-  'name'         => 'foo'
+ mysql> select title_id,ponum from sales, salesdetails where sales.sonum=salesdetails.sonum and qty_ordered=15;
+ +----------+----------+
+ | title_id | ponum    |
+ +----------+----------+
+ | MC3021   | 423LL922 |
+ | BU7832   | QQ2299   |
+ | PS3333   | P3087a   |
+ +----------+----------+
 
-  This will generate the following SQL statement:
+Now let's see it rendered in Recordset:
 
-  SELECT * FROM tab1, tab2 WHERE name = 'foo' and tab1.id=tab2.id ;
+<tt>pod_code "scripts/join-tablrelation.pl", 1</tt>
+
 
 =item B<!TabJoin>
 
@@ -557,6 +463,11 @@ Same as 2, but the !MainField is replaced with "name" of the linked record.
 =back
 
 See also B<!Links> and B<WORKING WITH MULTIPLE TABLES> below
+
+Here is how you "join" 3 tables if you are not comfortable with the link syntax:
+
+<tt>pod_code "scripts/3-table-join-manual.pl", 1</tt>
+
 
 =item B<!Links>
 
