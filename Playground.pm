@@ -6,7 +6,6 @@ use warnings;
 use DBI;
 use DBIx::Recordset;
 
-
 require Exporter;
 
 our @ISA = qw(Exporter);
@@ -18,22 +17,16 @@ our @ISA = qw(Exporter);
 # This allows declaration	use DBIx::Recordset::Playground ':all';
 # If you do not need this, moving things directly into @EXPORT or @EXPORT_OK
 # will save memory.
-our %EXPORT_TAGS = ( 'all' => [ qw(
-	
-) ] );
+our %EXPORT_TAGS = ( 'all' => [ qw( ) ] );
 
 our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
 
 our @EXPORT = qw(	
 );
 
-our $VERSION = '1.4';
-
+our $VERSION = sprintf '%s', q$Revision: 1.9 $ =~ /Revision:\s+(\S+)\s+/ ;
 
 # Preloaded methods go here.
-
-
-
 
 
 1;
@@ -59,7 +52,7 @@ Let the games begin!
 
 =head1 Preliminaries:
 
-=head2 Our Generic Connection/Library Script:
+=head2 Our Generic Connection/Library Script
 
 This script contains our connection information and a variety of
 convenience subroutines. The existence of these points to how we might
@@ -143,14 +136,46 @@ basics.
 
 The schema description is given in:
 
-L<DBSchema::Sample|DBSchema::Sample>.
+L<DBSchema::Sample|DBSchema::Sample>
 
 which is built via:
 
   perl -MDBSchema::Sample -e load
 
 
-=head1 SYNOPSIS
+=head1 LIVING CODE SAMPLES
+
+=head2 Building Where Clauses
+
+=head3 field op A OR field op B or file op C ...
+
+ #
+ #   scripts/build-where/or-conjunct.pl
+ #
+ 
+ require '../dbconn.pl';
+ use DBIx::Recordset;
+ use strict;
+ 
+ use vars qw(*set);
+ 
+ # Find all authors whose phone number is in area code 801 or 415
+ 
+ my @area_code = qw(801 415);
+ 
+ *set =
+   DBIx::Recordset -> Search
+   ({
+     conn_dbh(),
+     '!Table'   => 'authors',
+     '*phone'   => 'LIKE',
+       phone    => ( join "\t", map { "$_%" } @area_code ),
+    });
+ 
+ while ($set->Next) {
+     print Dumper(\%set)
+ }
+
 
 =head2 Selecting data with where criteria in a hash
 
@@ -413,7 +438,7 @@ This is useful when your have formdata in a hash for instance.
  warn Dumper($set{$_}) for @au_id;
 
 
-=head2 Tying Hashes to Databases with Expirable Caches
+=head2 Tying Hashes with Expirable Caches to Databases 
 
 L<DBIx::Recordset|DBIx::Recordset> 
 allows you to tie a hash to a database table, and retrieve the
@@ -423,6 +448,7 @@ via Recordset's C<!PreFetch>
 option. Your view can be expired based on a fixed amount of seconds or
 via a boolean subroutine which accepts the (tied hash via a scalar?) 
 as an argument.
+
 
  #
  #   scripts/prefetch-expire.pl
@@ -499,7 +525,7 @@ as an argument.
  
  my $insert_frequency = shift or die 'must specify insert frequency';
  
- use vars qw(*set %sales);
+ use vars qw(*set);
  
  sub rand_ponum {
    sprintf "%s%d%s", chr(65 + rand 25), rand 400 + rand 1000, 

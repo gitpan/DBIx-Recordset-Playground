@@ -8,7 +8,7 @@ use strict;
 
 my $insert_frequency = shift or die 'must specify insert frequency';
 
-use vars qw(*set %sales);
+use vars qw(*set);
 
 sub rand_ponum {
   sprintf "%s%d%s", chr(65 + rand 25), rand 400 + rand 1000, 

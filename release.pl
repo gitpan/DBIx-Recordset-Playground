@@ -11,6 +11,10 @@ print $/;
 
 #`cd scripts; ../delete-whitespace.pl; ../manifest-files.pl`;
 
+my @system = qw(cvs commit);
+system(@system) == 0 or die "system @system failed: $?";
+
+
 `perl tt.pl Playground.tt`;
 rename('Playground.tt-out', 'Playground.pm');
 `pod2html Playground.pm > Playground.html`;
@@ -24,14 +28,3 @@ print M $_, $/ while <scripts/*.pl>;
 print `perl Makefile.PL PREFIX=$ENV{PREFIX}`;
 print `make install`;
 print `make tardist`;
-
-print <<'EOTEXT';
-Now goto a cygwin shell and type
-
-  perl Makefile.PL PREFIX=$PREFIX
-  make tardist
-  upload-cpan.pl $release
-
-# dont you just love Windows?
-EOTEXT
-
