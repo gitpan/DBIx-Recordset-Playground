@@ -28,7 +28,7 @@ our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
 our @EXPORT = qw(	
 );
 
-our $VERSION = '0.02';
+our $VERSION = '0.05';
 
 
 # Preloaded methods go here.
@@ -47,10 +47,11 @@ __END__
 
 =head1 INTRODUCTION
 
-This document serves two purposes. One, it makes it easy to get started
+This document serves several purposes. One, it makes it easy to get started
 with DBIx::Recordset. Two, it serves as a place for those experienced with
 recordset to examine the code to discover how to make usage of recordset
-even simpler.
+even simpler. Finally, it serves as a place for me to clarify all the
+areas in the original docs that were a bit confusing to me.
 
 By working the examples in the order given in this document, you will be
 able to create a database and manipulate it, all from DBIx::Recordset.
@@ -84,7 +85,7 @@ Let the games begin!
  
  }
  
- sub conn_dbh { 
+ sub conn_dbh {
      ( '!DataSource' => dbh() );
  }
  
@@ -110,7 +111,7 @@ Let the games begin!
  CREATE TABLE IF NOT EXISTS person (
  id          mediumint unsigned not null primary key auto_increment,
  name        varchar(40) not null,
- age         varchar(255) not null, 
+ age         varchar(255) not null,
  country_id  mediumint unsigned
  )
  EOSQL
@@ -129,8 +130,6 @@ Let the games begin!
  $dbh->do('use test');
  $dbh->do($person_tbl);
  $dbh->do($country_tbl);
- 
- 
 
 
 =head2 POPULATE THE DATABASE
@@ -175,11 +174,33 @@ Let the games begin!
  			      ('!DataSource'   =>  dbh(),
  			       '!Table'        =>  'person')});
  }
- 
- 
 
 
 =head1 SYNOPSIS
+
+=head2 Selecting data with where criteria in a hash (formdata? :))
+
+ #
+ #   scripts/select-using-hash.pl
+ #
+ 
+ require 'dbconn.pl';
+ use DBIx::Recordset;
+ 
+ use vars qw(*rs);
+ 
+ *rs =
+   DBIx::Recordset -> Search ({
+ 
+       name => 'bob',
+       age  => 30,
+       conn_dbh(), person_table()
+ 
+       });
+ 
+ #print Dumper(\@rs); # results not fetched --- you get nothing!
+ print Dumper($rs[0]{name});
+
 
 =head2 Selecting data where values are in an arrayref:
 
@@ -192,9 +213,9 @@ Let the games begin!
  
  use vars qw(*rs);
  
- *rs = 
+ *rs =
    DBIx::Recordset -> Search ({
- 	
+ 
        '$where'   => 'name = ? and age = ?',
        '$values'  => ['bob',  30],
        conn_dbh(), person_table()
@@ -203,16 +224,6 @@ Let the games begin!
  
  #print Dumper(\@rs); # results not fetched --- you get nothing!
  print Dumper($rs[0]{name});
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
 
 
 =head2 Using Manual Indexing
@@ -228,9 +239,9 @@ Let the games begin!
  
  my %where = (name => 'jane');
  
- *set = 
+ *set =
    DBIx::Recordset -> Search ({
- 	
+ 
        %where,
        conn_dbh(), person_table()
  
@@ -244,13 +255,6 @@ Let the games begin!
  
  print "N: ", $set{name}, $/;
  print "A: ", $set{age}, $/;
- 
- 
- 
- 
- 
- 
- 
 
 
 =head2 Reusing a Set Object to do Another Search:
@@ -264,9 +268,9 @@ Let the games begin!
  
  use vars qw(*set);
  
- *set = 
+ *set =
    DBIx::Recordset -> Search ({
- 	
+ 
        '$where'   => 'name = ? and age = ?',
        '$values'  => ['bob',  30],
        conn_dbh(), person_table()
@@ -282,17 +286,6 @@ Let the games begin!
      });
  
  print $set[0]{age}, $/;
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
 
 
 =head2 Using C<Next()> to Iterate over a Result Set:
@@ -308,9 +301,9 @@ Let the games begin!
  
  my %where = (name => 'tony');
  
- *set = 
+ *set =
    DBIx::Recordset -> Search ({
- 	
+ 
        %where,
        conn_dbh(), person_table()
  
@@ -320,24 +313,449 @@ Let the games begin!
  while (my $rec = $set->Next) {
      print $rec->{age}, $/;
  }
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
 
+
+=head3 Using C<Next()> but Using the Implicitly Bound Hash:
+
+ #
+ #   scripts/using-hash-of-recordset.pl
+ #
+ 
+ require 'dbconn.pl';
+ use Data::Dumper;
+ use DBIx::Recordset;
+ 
+ use vars qw(*set);
+ 
+ *set =
+   DBIx::Recordset -> Search ({
+ 
+       name => 'jane',
+       conn_dbh(), person_table()
+ 
+       });
+ 
+ 
+ while ($set->Next) {
+     print Dumper(\%set);
+ }
+
+
+=head1
+
+DBIx::Recordset is a perl module for abstraction and simplification of
+database access.
+
+The goal is to make standard database access (select/insert/update/delete)
+easier to handle and independent of the underlying DBMS. While special 
+attention is
+paid to web applications, making it possible to handle state-less access
+and process the posted data of formfields, DBIx::Recordset is not
+limited to such applications.
+
+B<DBIx::Recordset> uses the DBI API to access the database, so it
+should work with 
+every database for which a DBD driver is available (see also DBIx::Compat).
+
+Most public functions take a hash reference as parameter, which makes it simple
+to supply various different arguments to the same function. The
+parameter hash 
+can also be taken from a hash containing posted formfields like those
+available with 
+CGI.pm, mod_perl, HTML::Embperl and others.
+
+Before using a recordset it is necessary to setup an object. Of course the
+setup step can be made with the same function call as the first
+database access, 
+but it can also be handled separately.
+
+Most functions which set up an object return a B<typeglob>. A typeglob
+in Perl is an  
+object which holds pointers to all datatypes with the same
+name. Therefore a typeglob 
+must always have a name and B<can't> be declared with B<my>. You can only
+use it as B<global> (package) variable or declare it with
+B<local>. The trick for using 
+a typglob is that setup functions can return a B<reference to an object>, an
+B<array> and a B<hash> at the same time.
+
+B<... concerns about package variables and mod_perl ...>
+
+The object is used to access the object's methods, the array is used to access
+the records currently selected in the recordset and the hash is used to access
+the current record.
+
+If you don't like the idea of using typglobs you can also set up the object,
+array and hash separately, or just set the ones you need.
+
+
+=head1 ARGUMENTS
+
+Since most methods take a hash reference as argument, here is a
+description of the valid arguments first.
+
+=head2 Setup Parameters
+
+All parameters starting with an '!' are B<only> recognized at setup time.
+B<If you specify them in later function calls they will be ignored.>
+Note: You can also preset these parameters with the TableAttr method of 
+DBIx::Database.  This allows you to setup most parameters
+for the whole database once and they will be use every time you create a new
+DBIx::Recordset object, without specifying it every time.
+
+=item B<!DataSource>
+
+Specifies the database to which to connect. This information can be given in
+the following ways:
+
+=over 4
+
+=item a DBI database handle
+
+Uses a given database handle.
+
+=item Driver/DB/Host.
+
+Same as the first parameter to the DBI connect function.
+
+=item DBIx::Recordset object
+
+Takes the same database handle as the given DBIx::Recordset object.
+
+=item DBIx::Database object
+
+Takes Driver/DB/Host from the given database object. See L<DBIx::Database> 
+for details about DBIx::Database object. When using more than one Recordset
+object, this is the most efficient method.
+
+=item DBIx::Database object name
+
+Takes Driver/DB/Host from the database object which is saved under
+the given name ($saveas parameter to DBIx::Database -> new)
+
+
+=back
+
+=item B<!Table>
+
+Tablename. Multiple tables are comma-separated.
+
+
+=item B<!Username>
+
+Username. Same as the second parameter to the DBI connect function.
+
+=item B<!Password>
+
+Password. Same as the third parameter to the DBI connect function.
+
+=item B<!DBIAttr>
+
+Reference to a hash which holds the attributes for the DBI connect
+function. See perldoc DBI for a detailed description.
+
+
+=item B<!Fields>
+
+Fields which should be returned by a query. If you have specified multiple
+tables the fieldnames should be unique. If the names are not unique you must
+specify them along with the tablename (e.g. tab1.field).
+
+
+NOTE 1: Fieldnames specified with !Fields can't be overridden. If you plan
+to use other fields with this object later, use $Fields instead.
+
+NOTE 2: The keys for the returned hash normally don't have a table part.
+Only the fieldname part forms the key. (See !LongNames for an exception.)
+
+NOTE 3: Because the query result is returned in a hash, there can only be
+one out of multiple fields with the same name fetched at once.
+If you specify multiple fields with the same name, only one is returned
+from a query. Which one this actually is depends on the DBD driver.
+(See !LongNames for an exception.)
+
+NOTE 4: Some databases (e.g. mSQL) require you to always qualify a fieldname
+with a tablename if more than one table is accessed in one query.
+
+=item B<!TableFilter>
+
+The TableFilter parameter specifies which tables should be honoured
+when DBIx::Recordset searches for links between tables (see
+below). When given as parameter to DBIx::Database it filters for which
+tables DBIx::Database retrieves metadata. Only thoses tables are used
+which starts with prefix given by C<!TableFilter>. Also the DBIx::Recordset
+link detection tries to use this value as a prefix of table names, so
+you can leave out this prefix when you write a fieldname that should
+be detected as a link to another table.
+
+=item B<!LongNames>
+
+When set to 1, the keys of the hash returned for each record not only
+consist of the fieldnames, but are built in the form table.field.
+
+=item B<!Order>
+
+Fields which should be used for ordering any query. If you have specified multiple
+tables the fieldnames should be unique. If the names are not unique you must
+specify them among with the tablename (e.g. tab1.field).
+
+
+NOTE 1: Fieldnames specified with !Order can't be overridden. If you plan
+to use other fields with this object later, use $order instead.
+
+B<... of course the question being how to do ascending and descending>
+
+=item B<!TabRelation>
+
+Condition which describes the relation between the given tables
+(e.g. tab1.id = tab2.id) (See also L<!TabJoin>.)
+
+  Example
+
+  '!Table'       => 'tab1, tab2',
+  '!TabRelation' => 'tab1.id=tab2.id',
+  'name'         => 'foo'
+
+  This will generate the following SQL statement:
+
+  SELECT * FROM tab1, tab2 WHERE name = 'foo' and tab1.id=tab2.id ;
+
+=item B<!TabJoin>
+
+!TabJoin allows you to specify an B<INNER/RIGHT/LEFT JOIN> which is
+used in a B<SELECT> statement. (See also L<!TabRelation>.)
+
+  Example
+
+  '!Table'   => 'tab1, tab2',
+  '!TabJoin' => 'tab1 LEFT JOIN tab2 ON	(tab1.id=tab2.id)',
+  'name'     => 'foo'
+
+  This will generate the following SQL statement:
+
+  SELECT * FROM tab1 LEFT JOIN tab2 ON	(tab1.id=tab2.id) WHERE name = 
+'foo' ;
+
+=item B<!PrimKey>
+
+Name of the primary key. When this key appears in a WHERE parameter list
+(see below), DBIx::Recordset will ignore all other keys in the list,
+speeding up WHERE expression preparation and execution.
+
+B<... oh I think I see. He means that the primary key alone should be
+enough to find your records, so why bother with anything else. So, if
+you set this up beforehand, then when formdata came piling in, you
+could search on primary key only if it happened to be in the formdata.>
+
+Note that this
+key does NOT have to correspond to a field tagged as PRIMARY KEY in a
+CREATE TABLE statement.
+
+=item B<!Serial>
+
+Name of the primary key. In contrast to C<!PrimKey> this field is treated
+as an autoincrement field. If the database does not support
+autoincrement fields, 
+but sequences the field is set to the next value of a sequence (see
+C<!Sequence> and C<!SeqClass>) 
+upon each insert. If a C<!SeqClass> is given the values are always
+retrived from the sequence class 
+regardless if the DBMS supports autoincrement or not.
+The value from this field from the last insert could be retrieved
+by the function C<LastSerial>.
+
+B<... aha! an how-to! ...>
+
+=item C<!Sequence>
+
+Name of the sequence to use for this table when inserting a new record and
+C<!Serial> is defind. Defaults to <tablename>_seq.
+
+B<... a feature related to DBMS which use sequences>
+
+=item C<!SeqClass>
+
+Name and Parameter for a class that can generate unique sequence
+values. This is 
+a string that holds comma separated values. The first value is the
+class name and 
+the following parameters are given to the new constructor. See also
+I<DBIx::Recordset::FileSeq> 
+and I<DBIx::Recordset::DBSeq>.  
+
+Example:  
+
+   '!SeqClass' => 'DBIx::Recordset::FileSeq, /tmp/seq'
+
+B<... another sequence-related feature>
+
+=item B<!WriteMode>
+
+!WriteMode specifies which write operations to the database are
+allowed and which are 
+disabled. You may want to set C<!WriteMode> to zero if you only need
+to query data, to 
+avoid accidentally changing the content of the database.
+
+B<NOTE:> The !WriteMode only works for the DBIx::Recordset methods. If you
+disable !WriteMode, it is still possible to use B<do> to send normal
+SQL statements to the database engine to write/delete any data.
+
+!WriteMode consists of some flags, which may be added together:
+
+=over 4
+
+=item DBIx::Recordset::wmNONE (0)
+
+Allow B<no> write access to the table(s)
+
+=item DBIx::Recordset::wmINSERT (1)
+
+Allow INSERT
+
+=item DBIx::Recordset::wmUPDATE (2)
+
+Allow UPDATE
+
+=item DBIx::Recordset::wmDELETE (4)
+
+Allow DELETE
+
+=item DBIx::Recordset::wmCLEAR (8)
+
+To allow DELETE for the whole table, wmDELETE must be also specified. This is 
+necessary for assigning a hash to a hash which is tied to a table. (Perl will 
+first erase the whole table, then insert the new data.)
+
+=item DBIx::Recordset::wmALL (15)
+
+Allow every access to the table(s)
+
+
+=back
+
+Default is wmINSERT + wmUPDATE + wmDELETE
+
+=item B<!StoreAll>
+
+If present, this will cause DBIx::Recordset to store all rows which will be fetched between
+consecutive accesses, so it's possible to access data in a random order. (e.g.
+row 5, 2, 7, 1 etc.) If not specified, rows will only be fetched into memory
+if requested, which means that you will have to access rows in ascending order.
+(e.g. 1,2,3 if you try 3,2,4 you will get an undef for row 2 while 3 and 4 is ok)
+see also B<DATA ACCESS> below.
+
+=item B<!HashAsRowKey>
+
+By default, the hash returned by the setup function is tied to the
+current record. 
+
+B<... this is already confusing. by "Setup Function" I presume he
+means the function SetupObject and only this function? Or does he mean
+any function which calls SetupObject. Such as Search(), Insert(),
+Update(), Delete(). 
+
+Also, the hash is not "returned" because the last sentence below says
+that
+this whole discussion relates to functions which return a
+typeglob... therefore I think he means functions which bind a hash
+with data of the current record.>
+
+You can use it to access the fields of the current
+record. If you set this parameter to true, the hash will by tied to
+the whole 
+database. This means that the key of the hash will be used as the
+primary key in 
+the table to select one row. 
+
+B<... cool can we get an example of this?>
+
+(This parameter only has an effect on
+functions 
+which return a typglob.)
+
+B<... "typglob" should be spelled "typeglob">
+
+=item B<!IgnoreEmpty>
+
+This parameter defines how B<empty> and B<undefined> values are handled. 
+The values 1 and 2 may be helpful when using DBIx::Recordset inside a CGI
+script, because browsers send empty formfields as empty strings.
+
+=over 4
+
+=item B<0 (default)>
+
+An undefined value is treated as SQL B<NULL>: an empty string remains an empty 
+string.
+
+=item B<1>
+
+All fields with an undefined value are ignored when building the WHERE expression.
+
+=item B<2>
+
+All fields with an undefined value or an empty string are ignored when building the 
+WHERE expression.
+
+=back
+
+B<NOTE:> The default for versions before 0.18 was 2.
+
+=item B<!Filter>
+
+Filters can be used to pre/post-process the data which is read from/written to the database.
+The !Filter parameter takes a hash reference which contains the filter functions. If the key
+is numeric, it is treated as a type value and the filter is applied to all fields of that 
+type. If the key if alphanumeric, the filter is applied to the named field.  Every filter 
+description consists of an array with at least two elements.  The first element must contain the input
+function, and the second element must contain the output function. Either may be undef, if only
+one of them are necessary. The data is passed to the input function before it is written to the
+database. The input function must return the value in the correct format for the database. The output
+function is applied to data read from the database before it is returned
+to the user.
+ 
+ 
+ Example:
+
+     '!Filter'   => 
+	{
+	DBI::SQL_DATE     => 
+	    [ 
+		sub { shift =~ /(\d\d)\.(\d\d)\.(\d\d)/ ; "19$3$2$1"},
+		sub { shift =~ /\d\d(\d\d)(\d\d)(\d\d)/ ; "$3.$2.$1"}
+	    ],
+
+	'datefield' =>
+	    [ 
+		sub { shift =~ /(\d\d)\.(\d\d)\.(\d\d)/ ; "19$3$2$1"},
+		sub { shift =~ /\d\d(\d\d)(\d\d)(\d\d)/ ; "$3.$2.$1"}
+	    ],
+
+	}
+
+Both filters convert a date in the format dd.mm.yy to the database format 19yymmdd and
+vice versa. The first one does this for all fields of the type SQL_DATE, the second one
+does this for the fields with the name datefield.
+
+The B<!Filter> parameter can also be passed to the function B<TableAttr> of the B<DBIx::Database>
+object. In this case it applies to all DBIx::Recordset objects which use
+these tables.
+
+A third parameter can be optionally specified. It could be set to C<DBIx::Recordset::rqINSERT>,
+C<DBIx::Recordset::rqUPDATE>, or the sum of both. If set, the InputFunction (which is called during
+UPDATE or INSERT) is always called for this field in updates and/or inserts depending on the value.
+If there is no data specified for this field
+as an argument to a function which causes an UPDATE/INSERT, the InputFunction
+is called with an argument of B<undef>.
+
+During UPDATE and INSERT the input function gets either the string 'insert' or 'update' passed as
+second parameter.
 
 
 
 =head1 AUTHOR
 
-T. M. Brannon, tbone@cpan.org
-
+T. M. Brannon, <tbone@cpan.org>
 
 =cut

@@ -5,9 +5,9 @@ use vars qw(*set);
 
 my %where = (name => 'tony');
 
-*set = 
+*set =
   DBIx::Recordset -> Search ({
-	
+
       %where,
       conn_dbh(), person_table()
 
@@ -17,14 +17,3 @@ my %where = (name => 'tony');
 while (my $rec = $set->Next) {
     print $rec->{age}, $/;
 }
-
-
-
-
-
-
-
-
-
-
-

@@ -5,9 +5,9 @@ use vars qw(*set);
 
 my %where = (name => 'tony');
 
-*set = 
+*set =
   DBIx::Recordset -> Search ({
-	
+
       %where,
       conn_dbh(), person_table()
 
@@ -19,7 +19,7 @@ use vars qw(*set2);
  *set2 =
 
   DBIx::Recordset -> Insert ({
-	
+
       name => 'foo',
       age  => '400',
       conn_dbh(), person_table()
@@ -42,9 +42,3 @@ $set->Update (
 
 
 o
-
-
-
-
-
-

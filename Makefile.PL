@@ -7,7 +7,9 @@ WriteMakefile(
     'VERSION_FROM'	=> 'Playground.pm', # finds $VERSION
     'PREREQ_PM'		=> {
 			    DBIx::Recordset => 0.24,
-			    DBI => 1.0
+			    DBI => 1.0,
+			    Text::Template => 1.44,
+        		    Whitespace => 1.02
 
 			   }, # e.g., Module::Name => 1.1
 	     );

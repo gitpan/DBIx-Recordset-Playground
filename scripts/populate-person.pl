@@ -34,5 +34,3 @@ for (@data) {
 			      ('!DataSource'   =>  dbh(),
 			       '!Table'        =>  'person')});
 }
-
-

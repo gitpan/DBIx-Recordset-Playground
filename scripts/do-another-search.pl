@@ -3,9 +3,9 @@ use DBIx::Recordset;
 
 use vars qw(*set);
 
-*set = 
+*set =
   DBIx::Recordset -> Search ({
-	
+
       '$where'   => 'name = ? and age = ?',
       '$values'  => ['bob',  30],
       conn_dbh(), person_table()
@@ -21,14 +21,3 @@ $set->Search({
     });
 
 print $set[0]{age}, $/;
-
-
-
-
-
-
-
-
-
-
-

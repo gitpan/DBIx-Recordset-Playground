@@ -5,6 +5,3 @@ use DBI;
      '!DataSource'   =>  dbh(),
      '!Table'        =>  'person'
      });
-
-
-

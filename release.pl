@@ -1,12 +1,13 @@
 print $/;
-print " Changes should be made to Playground.tt *not* Playgroun.pm \n";
+print " Changes should be made to Playground.tt *not* Playground.pm \n";
+print " Changes should be made to MANIFEST.sans-scripts *not* MANIFEST \n";
 print $/;
 
 print $/;
 print "I hope you bumped the version number", $/;
 print $/;
 
-`cd scripts; manifest-files.pl`;
+`cd scripts; delete-whitespace.pl; manifest-files.pl`;
 
 `tt.pl Playground.tt`;
 rename('Playground.tt-out', 'Playground.pm');
@@ -17,4 +18,15 @@ open L, "MANIFEST.sans-scripts";
 print M $_ while <L>;
 open L, "scripts/LOCAL_MANIFEST";
 print M $_ while <L>;
+
+
+print <<EOTEXT;
+Now goto a cygwin shell and type
+
+  perl Makefile.PL PREFIX=$PREFIX
+  make tardist
+  upload-cpan.pl $release
+
+# dont you just love Windows?
+EOTEXT
 
