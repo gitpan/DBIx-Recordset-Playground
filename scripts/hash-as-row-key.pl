@@ -3,12 +3,9 @@ use DBIx::Recordset;
 use strict;
 use vars qw(*set);
 
-my %DEBUG = ('!Debug' => 0);
-
 *set = DBIx::Recordset -> Setup
   ({
     conn_dbh(),
-    %DEBUG,
     '!Table'	    => 'authors',
     '!HashAsRowKey' => 1,
     '!PrimKey'      => 'au_id'

@@ -1,3 +1,5 @@
+#!/usr/bin/perl
+
 print $/;
 print " Changes should be made to Playground.tt *not* Playground.pm \n";
 print " Changes should be made to MANIFEST.sans-scripts *not* MANIFEST \n";
@@ -11,6 +13,7 @@ print $/;
 
 `perl tt.pl Playground.tt`;
 rename('Playground.tt-out', 'Playground.pm');
+`pod2html Playground.pm > Playground.html`;
 
 open M, ">MANIFEST";
 

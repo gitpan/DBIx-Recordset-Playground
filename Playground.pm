@@ -27,7 +27,7 @@ our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
 our @EXPORT = qw(	
 );
 
-our $VERSION = '1.2';
+our $VERSION = '1.4';
 
 
 # Preloaded methods go here.
@@ -75,9 +75,20 @@ basics.
  
  # change to match your local connection parameters
  
- my  $dsn = 'DBI:mysql:database=princepawn;host=localhost';
- my  $user='princepawn';
- my  $pass='money1';
+ my ($dsn, $user, $pass);
+ 
+ # mysql
+ {
+   last;
+   $dsn = 'DBI:mysql:database=princepawn;host=localhost';
+   $user='princepawn';
+   $pass='money1';
+ }
+ 
+ # psql
+   $dsn = 'DBI:Pg:dbname=test;host=localhost';
+ 
+ 
  my  $attr= { RaiseError => 1 };
  
  
@@ -340,6 +351,188 @@ This is useful when your have formdata in a hash for instance.
  
  while ($set->Next) {
      print $set{royalty}, $/;
+ }
+
+
+=head2 Filtering Data on Input/Output to/from Database
+
+ #
+ #   scripts/filter-authors.pl
+ #
+ 
+ require 'dbconn.pl';
+ use DBIx::Recordset;
+ use strict;
+ 
+ use vars qw(*set);
+ 
+ *set =
+   DBIx::Recordset -> Search
+   ({
+     conn_dbh(), author_table(),
+     '$max' => 10,
+     '!Filter' => {
+ 		  DBI::SQL_VARCHAR => [
+ 				       undef, # no input filtering
+ 				       sub { uc (shift()) }
+ 				      ]
+ 		  }
+    });
+ 
+ 
+ while ($set->Next) {
+     print Dumper(\%set)
+ }
+ 
+
+
+
+=head2 Tying a Table to a Hash for Easy Lookup by Primary Key
+
+ #
+ #   scripts/hash-as-row-key.pl
+ #
+ 
+ require 'dbconn.pl';
+ use DBIx::Recordset;
+ use strict;
+ use vars qw(*set);
+ 
+ *set = DBIx::Recordset -> Setup
+   ({
+     conn_dbh(),
+     '!Table'	    => 'authors',
+     '!HashAsRowKey' => 1,
+     '!PrimKey'      => 'au_id'
+    });
+ 
+ 
+ my @au_id = qw( 409-56-7008  213-46-8915 998-72-3567 );
+ 
+ 
+ warn Dumper($set{$_}) for @au_id;
+
+
+=head2 Tying Hashes to Databases with Expirable Caches
+
+L<DBIx::Recordset|DBIx::Recordset> 
+allows you to tie a hash to a database table, and retrieve the
+records of the table via the hash's key. You can tie the entire table
+or create an expirable "view" of a subset of the table 
+via Recordset's C<!PreFetch>
+option. Your view can be expired based on a fixed amount of seconds or
+via a boolean subroutine which accepts the (tied hash via a scalar?) 
+as an argument.
+
+ #
+ #   scripts/prefetch-expire.pl
+ #
+ 
+ #!/usr/bin/perl
+ 
+ require 'dbconn.pl';
+ use DBIx::Recordset;
+ use strict;
+ 
+ # This program repeatedly presents sales data on STDOUT, refreshing 
+ # the view every $view_refresh seconds. It refreshes its 
+ # model (from the database) every $model_refresh seconds.
+ 
+ # The default values for $model_refresh and $view_refresh imply that 
+ # the model will refreshed after 2.6 view refreshes or practically speaking
+ # on every 3rd view refresh.
+ 
+ # You can verify that it makes new hits on the database by noting the
+ # DBIx::Recordset log messages. You will see this after every 3 view
+ # displays:
+ # DB:  'SELECT * FROM sales     ORDER BY sonum DESC  LIMIT 6' bind_values=<> bind_types=<>
+ 
+ # To spice things up, you can open a different terminal window and run
+ # prefetch-insert.pl, which will insert a new record into the sales table
+ # every $x seconds.
+ 
+ # This program requires a version of DBIx::Recordset > 0.24, which is the 
+ # current CPAN release. Or you can apply the patch recently posted to
+ # the embperl@perl.apache.org mailing list.
+ 
+ my $model_refresh = 13;
+ my $view_refresh  = 5;
+ 
+ use vars qw(%sales);
+ 
+ tie %sales, 'DBIx::Recordset::Hash',
+   {
+    conn_dbh(),
+    '!Table' => 'sales',
+    '!PreFetch' => {
+ 		   '$max'    => 5,
+ 		   '$order'  => 'sonum DESC'
+ 		  },
+    '!PrimKey'  => 'sonum',
+    '!Expires'  => $model_refresh
+   };
+ 
+ sub bynumber { $a <=> $b }
+ 
+ while (1) {
+ 
+   my (@key) = keys %sales;
+   print $sales{$_}{sonum}, $/ for sort bynumber @key;
+   sleep $view_refresh;
+   print $/;
+ 
+ }
+ 
+
+
+ #
+ #   scripts/prefetch-insert.pl
+ #
+ 
+ require 'dbconn.pl';
+ use DBIx::Recordset;
+ use strict;
+ 
+ 
+ # This program takes one argument, an integer indicating how often it should
+ # insert a random record into the sales table.
+ 
+ my $insert_frequency = shift or die 'must specify insert frequency';
+ 
+ use vars qw(*set %sales);
+ 
+ sub rand_ponum {
+   sprintf "%s%d%s", chr(65 + rand 25), rand 400 + rand 1000, 
+     lc chr(65 + rand 25);
+ }
+ 
+ 
+ *set = DBIx::Recordset->Search
+   ({
+     conn_dbh(),
+     '!Table'  => 'sales',
+     '!Fields' => 'max(sonum) as max_id',
+     });
+ 
+ my $max_id = $set{max_id};
+ 
+ 
+ while (1) {
+ 
+   DBIx::Recordset->Insert
+       (
+        {
+ 	conn_dbh(),
+ 	'!Table'  => 'sales',
+ 	sonum     => ++$max_id,
+ 	stor_id   => (sprintf "%d", 7000 + rand 1000),
+ 	ponum     => rand_ponum,
+ 	sdate     => '2003-10-22'
+        }
+        );
+ 
+   sleep $insert_frequency;
+ 
  }
 
 

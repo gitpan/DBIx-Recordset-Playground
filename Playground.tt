@@ -27,7 +27,7 @@ our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
 our @EXPORT = qw(	
 );
 
-our $VERSION = '1.1';
+our $VERSION = '1.4';
 
 
 # Preloaded methods go here.
@@ -109,6 +109,30 @@ This is useful when your have formdata in a hash for instance.
 =head3 Using C<Next()> but Using the Implicitly Bound Hash:
 
 <tt>pod_code "scripts/using-implicit-hash.pl", 1</tt>
+
+=head2 Filtering Data on Input/Output to/from Database
+
+<tt>pod_code "scripts/filter-authors.pl", 1</tt>
+
+
+=head2 Tying a Table to a Hash for Easy Lookup by Primary Key
+
+<tt>pod_code "scripts/hash-as-row-key.pl", 1</tt>
+
+=head2 Tying Hashes to Databases with Expirable Caches
+
+L<DBIx::Recordset|DBIx::Recordset> 
+allows you to tie a hash to a database table, and retrieve the
+records of the table via the hash's key. You can tie the entire table
+or create an expirable "view" of a subset of the table 
+via Recordset's C<!PreFetch>
+option. Your view can be expired based on a fixed amount of seconds or
+via a boolean subroutine which accepts the (tied hash via a scalar?) 
+as an argument.
+
+<tt>pod_code "scripts/prefetch-expire.pl", 1</tt>
+
+<tt>pod_code "scripts/prefetch-insert.pl", 1</tt>
 
 =head1
 

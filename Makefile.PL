@@ -3,7 +3,7 @@ use ExtUtils::MakeMaker;
 # the contents of the Makefile that is written.
 WriteMakefile(
     'NAME'		=> 'DBIx::Recordset::Playground',
-    'VERSION_FROM'	=> 'Playground.pm', # finds $VERSION
+    'VERSION_FROM'	=> 'Playground.tt', # finds $VERSION
     'PREREQ_PM'		=> {
 			    DBIx::Recordset => 0.24,
 			    DBI => 1.0,
