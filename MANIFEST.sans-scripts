@@ -1,0 +1,11 @@
+Changes
+Playground.pm
+Playground.tt
+Makefile.PL
+MANIFEST
+MANIFEST.sans-scripts
+README
+release.pl
+t/1.t
+tt.pl
+release.pl
